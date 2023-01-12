@@ -1,0 +1,82 @@
+version: "2.2"
+networks:
+  default:
+    name: elasticsearch_network
+services:
+  es1:
+    image: ${elasticsearch_image}
+    container_name: es1
+    environment:
+      - cluster.name=es-cluster
+      - node.name=es1
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.seed_hosts=es1,es2,es3
+      - cluster.initial_master_nodes=es1,es2,es3
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./elasticsearch/es1/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch/es1/logs/:/usr/share/elasticsearch/logs/
+      - ./elasticsearch/es1/plugins/:/usr/share/elasticsearch/plugins/
+    ports:
+      - 9200:9200
+  es2:
+    image: ${elasticsearch_image}
+    container_name: es2
+    environment:
+      - cluster.name=es-cluster
+      - node.name=es2
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.seed_hosts=es1,es2,es3
+      - cluster.initial_master_nodes=es1,es2,es3
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./elasticsearch/es2/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch/es2/logs/:/usr/share/elasticsearch/logs/
+      - ./elasticsearch/es2/plugins/:/usr/share/elasticsearch/plugins/
+    ports:
+      - 9201:9200
+  es3:
+    image: ${elasticsearch_image}
+    container_name: es3
+    environment:
+      - cluster.name=es-cluster
+      - node.name=es3
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.seed_hosts=es1,es2,es3
+      - cluster.initial_master_nodes=es1,es2,es3
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./elasticsearch/es3/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./elasticsearch/es3/logs/:/usr/share/elasticsearch/logs/
+      - ./elasticsearch/es3/plugins/:/usr/share/elasticsearch/plugins/
+    ports:
+      - 9202:9200
+  kibana:
+    image: ${kibana_image}
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_URL=http://es1:9200
+      - I18N_LOCALE=zh-CN
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - 5601:5601
+  cerebro:
+    image: ${cerebro_image}
+    container_name: cerebro
+    ports:
+      - 9000:9000
+    command:
+      - -Dhosts.0.host=http://es1:9200
